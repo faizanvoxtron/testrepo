@@ -1,0 +1,36 @@
+name: Deploy to Ubuntu Server
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow when code is pushed to the `main` branch.
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the Repository Code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Set Up SSH Key for Authentication
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    # Step 3: Transfer Code to Ubuntu Server
+    - name: Transfer files to server
+      run: |
+        scp -r . ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/project
+
+    # Step 4: (Optional) Execute Commands on the Server
+    - name: Run post-deployment script
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+        cd /home/${{ secrets.SERVER_USER }}/project
+        # Run commands on the server, e.g., restart services, build the code, etc.
+        echo "Code transferred successfully!"
+        EOF
+
